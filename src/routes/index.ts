@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { APP_NAME, APP_VERSION } from '../config/constants';
 import { ok } from '../utils/response';
 import { authRouter } from '../modules/auth/auth.routes';
+import { catalogRouter } from '../modules/catalog/catalog.routes';
 
 export const apiRouter = Router();
 
@@ -9,6 +10,7 @@ apiRouter.get('/', (_req, res) => {
     ok(res, { name: APP_NAME, version: APP_VERSION });
 });
 apiRouter.use('/auth', authRouter);
+apiRouter.use(catalogRouter);
 
 
 // Modules are mounted here, one milestone at a time:

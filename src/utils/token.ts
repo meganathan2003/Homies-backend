@@ -21,7 +21,7 @@ export function signAuthToken(userId: string): string {
 
 // verify the token
 
-export function verifyToken(token: string): string {
+export function verifyAuthToken(token: string): string {
 
     try {
         const payload = jwt.verify(token, env.JWT_SECRET, {

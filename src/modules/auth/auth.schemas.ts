@@ -38,5 +38,20 @@ export const loginSchema = z.object({
     platform: z.string().optional(),
 });
 
+const names = z
+    .array(z.string().trim().min(1).max(100))
+    .max(20)
+    .transform((list) => [...new Set(list)]); // trim + remove duplicates
+
+// The app sends helps and interests in SEPARATE calls, and may send the other one as null.
+// Only fields that are actually present are updated. `id` in the body is ignored on purpose.
+export const updateProfileSchema = z
+    .object({
+        helps: names.nullish(),
+        interests: names.nullish(),
+    })
+    .refine((v) => v.helps != null || v.interests != null, 'Nothing to update: send helps and/or interests');
+
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

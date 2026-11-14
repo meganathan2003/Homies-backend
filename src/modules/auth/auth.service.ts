@@ -1,11 +1,12 @@
 import { UserModel, type UserDoc } from '../../models/user.model';
-import { resolveIdentity } from '../../services/identity.service';
-import { conflict, forbidden, notFound, unavailable } from '../../utils/errors';
+import { Identity, resolveIdentity } from '../../services/identity.service';
+import { conflict, forbidden, notFound, unauthorized, unavailable } from '../../utils/errors';
 import { generateAnonymousAlias, generateHomieId } from '../../utils/ids';
 import { logger } from '../../utils/logger';
 import { duplicateKeyFields } from '../../utils/mongoErrors';
 import { signAuthToken } from '../../utils/token';
-import type { LoginInput, RegisterInput } from './auth.schemas';
+import { resolveCatalogNames } from '../catalog/catalog.service';
+import type { LoginInput, RegisterInput, UpdateProfileInput } from './auth.schemas';
 
 const MAX_ID_ATTEMPTS = 5;
 
@@ -48,9 +49,47 @@ export async function loginUser(input: LoginInput): Promise<{ user: UserDoc; tok
     const identity = await resolveIdentity({ idToken: input.idToken, email: input.email });
 
     // dob / mobileNumber are select:false, so ask for them explicitly (the user sees their own data).
-    const user = await UserModel.findOne({ firebaseUid: identity.uid }).select('+dob +mobileNumber');
+    let user = await UserModel.findOne({ firebaseUid: identity.uid }).select('+dob +mobileNumber');
+    if (!user) user = await bindProvisionedStaff(identity); // first login of an expert/admin created by us
     if (!user) throw notFound('User not found');
-    if (user.status !== 'active') throw forbidden('Your account is suspended');
 
     return { user, token: signAuthToken(user.id) };
+}
+
+
+/**
+ * An expert/admin account made by the seed script or an admin has an email but no Firebase uid yet.
+ * The first login with that VERIFIED email claims it. Only staff without a uid can be claimed
+ * (never a member), and the single atomic update means two simultaneous logins can't both claim it.
+ */
+async function bindProvisionedStaff(identity: Identity) {
+    return UserModel.findOneAndUpdate(
+        { email: identity.email, role: { $ne: 'member' }, firebaseUid: { $exists: false } },
+        { $set: { firebaseUid: identity.uid } },
+        { new: true },
+    ).select('+dob +mobileNumber');
+}
+
+// update the profile code
+export async function getOwnProfile(userId: string): Promise<UserDoc> {
+    const user = await UserModel.findById(userId).select('+dob +mobileNumber');
+    if (!user) throw unauthorized('Invalid or expired token');
+    return user;
+}
+
+export async function updateOwnProfile(userId: string, input: UpdateProfileInput): Promise<UserDoc> {
+
+
+    // Build $set from ONLY the fields that were sent, so the other list is never wiped.
+    const set: { helps?: string[]; interests?: string[] } = {};
+
+
+    // Only names that exist in the catalog are accepted (and stored with their official spelling).
+    if (input.helps != null) set.helps = await resolveCatalogNames('help', input.helps);
+    if (input.interests != null) set.interests = await resolveCatalogNames('interest', input.interests);
+
+    // One atomic update (not load -> modify -> save), so two quick calls can't overwrite each other.
+    const user = await UserModel.findByIdAndUpdate(userId, { $set: set }, { new: true, runValidators: true }).select('+dob +mobileNumber',);
+    if (!user) throw unauthorized('Invalid or expired token');
+    return user;
 }

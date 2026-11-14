@@ -24,9 +24,9 @@ function requiredForStaff(this: { role?: string }): boolean {
 
 const userSchema = new Schema(
     {
-        // ---- identity ----
         email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-        firebaseUid: { type: String, required: true, unique: true },
+        // sparse = many staff documents may have no uid yet; the unique index only applies when it exists.
+        firebaseUid: { type: String, required: requiredForMember, unique: true, sparse: true },
         role: { type: String, enum: USER_ROLES, default: 'member' },
         status: { type: String, enum: USER_STATUSES, default: 'active' },
 
