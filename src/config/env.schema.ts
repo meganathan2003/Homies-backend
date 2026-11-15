@@ -22,6 +22,8 @@ const schema = z
         ALLOW_UNVERIFIED_GOOGLE_LOGIN: flag,
 
         FACE_PROVIDER: z.enum(['mock', 'aws']).default('mock'),
+        // Only used by the mock provider (development): which result it pretends to get.
+        MOCK_FACE_SCENARIO: z.enum(['pass', 'no_face', 'two_faces', 'low_confidence', 'female']).default('pass'),
 
         UPLOAD_DIR: z.string().min(1).default('./uploads'),
         MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(500).default(50),

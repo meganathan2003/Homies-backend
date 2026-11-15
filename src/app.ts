@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'node:path';
 import { env, isProd } from './config/env';
 import { healthRouter } from './modules/health/health.routes';
 import { apiRouter } from './routes';
@@ -33,6 +34,8 @@ export function createApp() {
 
     app.use('/health', healthRouter);
     app.use('/api', apiLimiter, apiRouter);
+    // Serve uploaded files. helmet() sets strict CSP, so we need to allow images/videos from self.
+    app.use('/uploads', express.static(path.resolve(env.UPLOAD_DIR)));
 
     app.use(notFoundHandler);
     app.use(errorHandler);

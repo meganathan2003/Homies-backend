@@ -3,6 +3,10 @@ import { APP_NAME, APP_VERSION } from '../config/constants';
 import { ok } from '../utils/response';
 import { authRouter } from '../modules/auth/auth.routes';
 import { catalogRouter } from '../modules/catalog/catalog.routes';
+import { verificationRouter } from '../modules/verification/verification.routes';
+import { uploadRouter } from '../modules/upload/upload.routes';
+import { postsRouter } from '../modules/posts/post.routes';
+import { commentsRouter } from '../modules/comments/comment.routes';
 
 export const apiRouter = Router();
 
@@ -11,13 +15,16 @@ apiRouter.get('/', (_req, res) => {
 });
 apiRouter.use('/auth', authRouter);
 apiRouter.use(catalogRouter);
-
+apiRouter.use(verificationRouter);
+apiRouter.use(uploadRouter);  // M4
+apiRouter.use(postsRouter);   // M5
+apiRouter.use(commentsRouter); // M5
 
 // Modules are mounted here, one milestone at a time:
 // M1 auth      -> apiRouter.use('/auth', authRouter)
 // M2 catalogs  -> apiRouter.use(catalogsRouter)
 // M3 verify    -> apiRouter.use('/verification', verificationRouter)
-// M4 upload    -> apiRouter.use('/upload', uploadRouter)
-// M5 posts     -> apiRouter.use('/posts', postsRouter), apiRouter.use('/comments', commentsRouter)
+// M4 upload    -> apiRouter.use(uploadRouter)                          ✅ done
+// M5 posts     -> apiRouter.use(postsRouter), apiRouter.use(commentsRouter) ✅ done
 // M6 chat      -> apiRouter.use('/users', expertsRouter), apiRouter.use('/chats', chatRouter)
 // M7 admin     -> apiRouter.use('/admin', adminRouter)
