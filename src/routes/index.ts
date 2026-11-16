@@ -7,6 +7,7 @@ import { verificationRouter } from '../modules/verification/verification.routes'
 import { uploadRouter } from '../modules/upload/upload.routes';
 import { postsRouter } from '../modules/posts/post.routes';
 import { commentsRouter } from '../modules/comments/comment.routes';
+import { usersRouter, chatRouter } from '../modules/chat/chat.routes';
 
 export const apiRouter = Router();
 
@@ -17,8 +18,10 @@ apiRouter.use('/auth', authRouter);
 apiRouter.use(catalogRouter);
 apiRouter.use(verificationRouter);
 apiRouter.use(uploadRouter);  // M4
-apiRouter.use(postsRouter);   // M5
+apiRouter.use(postsRouter);    // M5
 apiRouter.use(commentsRouter); // M5
+apiRouter.use(usersRouter);    // M6
+apiRouter.use(chatRouter);     // M6
 
 // Modules are mounted here, one milestone at a time:
 // M1 auth      -> apiRouter.use('/auth', authRouter)
@@ -26,5 +29,5 @@ apiRouter.use(commentsRouter); // M5
 // M3 verify    -> apiRouter.use('/verification', verificationRouter)
 // M4 upload    -> apiRouter.use(uploadRouter)                          ✅ done
 // M5 posts     -> apiRouter.use(postsRouter), apiRouter.use(commentsRouter) ✅ done
-// M6 chat      -> apiRouter.use('/users', expertsRouter), apiRouter.use('/chats', chatRouter)
+// M6 chat      -> apiRouter.use(usersRouter), apiRouter.use(chatRouter)     ✅ done
 // M7 admin     -> apiRouter.use('/admin', adminRouter)

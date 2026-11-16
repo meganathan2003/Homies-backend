@@ -29,6 +29,7 @@ export async function registerMember(input: RegisterInput): Promise<{ user: User
                 profession: input.profession,
                 typeOfWork: input.typeOfWork,
                 workTiming: input.workTiming,
+                purposeOfJoining: input.purposeOfJoining ?? null,
             });
             return { user, token: signAuthToken(user.id) };
         } catch (err) {

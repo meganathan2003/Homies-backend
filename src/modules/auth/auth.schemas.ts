@@ -30,6 +30,10 @@ export const registerSchema = z.object({
     profession: text(100),
     workTiming,
     typeOfWork: z.string().trim().min(10, 'typeOfWork must be at least 10 characters').max(300),
+    // Manager requirement: login purpose selection
+    purposeOfJoining: z
+        .enum(['mental_health', 'peer_support', 'career_advice', 'general', 'other'])
+        .optional(),
 });
 
 export const loginSchema = z.object({

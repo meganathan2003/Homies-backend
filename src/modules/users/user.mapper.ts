@@ -28,5 +28,6 @@ export function toSelfDto(user: UserDoc) {
         isImageVerified: user.isImageVerified,
         isVoiceVerified: user.isVoiceVerified,
         isProfileVerified: user.isProfileVerified,
+        purposeOfJoining: user.purposeOfJoining ?? null,
     };
 }

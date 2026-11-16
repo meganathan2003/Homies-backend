@@ -51,10 +51,21 @@ const userSchema = new Schema(
         isVoiceVerified: { type: Boolean, default: false },
         isProfileVerified: { type: Boolean, default: false },
 
+        // ---- member: why they joined (login purpose selection) ----
+        purposeOfJoining: {
+            type: String,
+            enum: ['mental_health', 'peer_support', 'career_advice', 'general', 'other'],
+            default: null,
+        },
+
         // ---- expert only ----
         expertProfile: {
             bio: { type: String, trim: true },
             specialization: { type: String, trim: true },
+            // New manager requirements: qualifications, fees, online status
+            qualifications: { type: [String], default: [] }, // e.g. ["M.Sc Psychology", "RCI Licensed"]
+            sessionFee: { type: Number, default: 0 },        // fee in ₹ per session
+            isOnline: { type: Boolean, default: false },     // real-time availability flag
         },
 
         lastSeenAt: { type: Date },

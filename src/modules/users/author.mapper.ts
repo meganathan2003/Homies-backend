@@ -1,5 +1,9 @@
 import type { UserDoc } from '../../models/user.model';
 
+type UserLike = Pick<UserDoc,
+    'id' | 'homiesId' | 'role' | 'name' | 'profession' | 'isImageVerified' | 'expertProfile'
+>;
+
 /**
  * Privacy rule (from the planning doc):
  *   - Member looking at a post/comment author → anonymous alias only (e.g. "Homie-7F3A")
@@ -49,9 +53,9 @@ export function toMemberFeedDto(user: UserDoc) {
  * What anyone can see about an expert in a feed or directory listing.
  * Real name + profession are shown (experts are public figures in the app).
  */
-export function toExpertPublicDto(user: UserDoc) {
+export function toExpertPublicDto(user: UserLike) {
     return {
-        id: user.id as string,
+        id: String(user.id),
         name: user.name ?? '',
         profession: user.profession ?? '',
         isImageVerified: user.isImageVerified,
