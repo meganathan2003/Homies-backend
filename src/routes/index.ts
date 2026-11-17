@@ -21,7 +21,7 @@ apiRouter.use(uploadRouter);  // M4
 apiRouter.use(postsRouter);    // M5
 apiRouter.use(commentsRouter); // M5
 apiRouter.use(usersRouter);    // M6
-apiRouter.use(chatRouter);     // M6
+apiRouter.use(chatRouter);     
 
 // Modules are mounted here, one milestone at a time:
 // M1 auth      -> apiRouter.use('/auth', authRouter)
