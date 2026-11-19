@@ -18,6 +18,7 @@ export const env = {
     jwtSecret: str('JWT_SECRET'),
     jwtExpiresIn: str('JWT_EXPIRES_IN', '7d'),
     adminEmails: str('ADMIN_EMAILS').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
+    expertSharePercent: Number(str('EXPERT_SHARE_PERCENT', '60')),
     devAuthBypass: bool('DEV_AUTH_BYPASS'),
     firebase: {
         projectId: str('FIREBASE_PROJECT_ID'),
@@ -59,6 +60,7 @@ export function validateEnv(): void {
             throw new Error('RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET and RAZORPAY_WEBHOOK_SECRET are required in production');
         }
     }
+    if (!(env.expertSharePercent >= 0 && env.expertSharePercent <= 100)) throw new Error('EXPERT_SHARE_PERCENT must be between 0 and 100');
     if (env.isProd && env.devAuthBypass) throw new Error('DEV_AUTH_BYPASS must be false in production');
     if (env.isProd && env.storage.driver !== 's3') throw new Error('STORAGE_DRIVER must be s3 in production');
     const st = env.storage;

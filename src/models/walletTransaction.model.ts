@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose';
 
 export type TxnType = 'credit' | 'debit';
-export type TxnReason = 'topup' | 'story_purchase' | 'consultation' | 'subscription' | 'refund' | 'adjustment';
+export type TxnReason = 'topup' | 'story_purchase' | 'consultation' | 'subscription' | 'refund' | 'adjustment' | 'consultation_earning';
 
 export interface IWalletTransaction {
     id: string;
