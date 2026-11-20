@@ -10,7 +10,7 @@ async function ensureWallet(userId: string) {
         return await Wallet.findOneAndUpdate(
             { userId },
             { $setOnInsert: { userId, balance: 0 } },
-            { upsert: true, new: true },
+            { upsert: true, returnDocument: 'after' },
         );
     } catch (err) {
         if ((err as { code?: number }).code === 11000) return (await Wallet.findOne({ userId }))!;
@@ -30,7 +30,7 @@ export async function credit(userId: string, amountPaise: number, meta: LedgerMe
         if (done) return getBalancePaise(userId);
     }
     await ensureWallet(userId);
-    const w = await Wallet.findOneAndUpdate({ userId }, { $inc: { balance: amountPaise } }, { new: true });
+    const w = await Wallet.findOneAndUpdate({ userId }, { $inc: { balance: amountPaise } }, { returnDocument: 'after' });
     await WalletTransaction.create({
         id: newId('txn'), userId, type: 'credit', amount: amountPaise, balanceAfter: w!.balance, ...meta,
     });
@@ -44,7 +44,7 @@ export async function debit(userId: string, amountPaise: number, meta: LedgerMet
     const w = await Wallet.findOneAndUpdate(
         { userId, balance: { $gte: amountPaise } },
         { $inc: { balance: -amountPaise } },
-        { new: true },
+        { returnDocument: 'after' },
     );
     if (!w) throw new HttpError(402, 'Insufficient wallet balance');
     await WalletTransaction.create({

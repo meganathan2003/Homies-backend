@@ -30,7 +30,7 @@ async function settle(orderId: string, paymentId: string, signature?: string) {
     const claimed = await Payment.findOneAndUpdate(
         { razorpayOrderId: orderId, status: { $in: ['created', 'failed'] } },
         { $set: { status: 'paid', razorpayPaymentId: paymentId, razorpaySignature: signature, paidAt: new Date() }, $unset: { failureReason: '' } },
-        { new: true },
+        { returnDocument: 'after' },
     );
     if (!claimed) {
         const existing = await Payment.findOne({ razorpayOrderId: orderId });

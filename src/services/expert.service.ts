@@ -52,7 +52,7 @@ export async function updateMyProfile(
 }
 
 export async function setMyAvailability(user: UserDoc, availability: Availability) {
-    const p = await ExpertProfile.findOneAndUpdate({ userId: user.id }, { $set: { availability } }, { new: true });
+    const p = await ExpertProfile.findOneAndUpdate({ userId: user.id }, { $set: { availability } }, { returnDocument: "after" });
     if (!p) throw new HttpError(404, 'Expert profile not found');
     return toMyProfile(user, p);
 }
@@ -104,7 +104,7 @@ export async function adminCreateExpert(input: { email: string; firstName: strin
     const profile = await ExpertProfile.findOneAndUpdate(
         { userId: user.id },
         { $setOnInsert: { userId: user.id, status: 'pending', includedInMembership: input.includedInMembership ?? false } },
-        { upsert: true, new: true },
+        { upsert: true, returnDocument: 'after' },
     );
     return { email, ...toMyProfile(user, profile!) };
 }

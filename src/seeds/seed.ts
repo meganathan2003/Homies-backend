@@ -84,7 +84,7 @@ async function seed() {
                         availability: 'offline',
                     },
                 },
-                { upsert: true, new: true },
+                { upsert: true, returnDocument: 'after' },
             );
         }
 

@@ -5,7 +5,7 @@ export async function consume(userId: string): Promise<string | null> {
     const c = await ConsultationCredit.findOneAndUpdate(
         { userId, remaining: { $gt: 0 }, expiresAt: { $gt: new Date() } },
         { $inc: { remaining: -1 } },
-        { sort: { expiresAt: 1 }, new: true }, // mudiya pora credit mudhalla
+        { sort: { expiresAt: 1 }, returnDocument: 'after' }, // mudiya pora credit mudhalla
     );
     return c ? String(c._id) : null;
 }
