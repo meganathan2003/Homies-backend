@@ -8,7 +8,10 @@ import { MulterError } from 'multer';
 export const notFound = (_req: Request, res: Response) => fail(res, 404, 'Route not found');
 
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
-    if (err instanceof HttpError) return fail(res, err.status, err.message);
+
+
+    if (err instanceof HttpError) return fail(res, err.status, err.message, err.code);
+    
     if (err instanceof ZodError) {
         return fail(res, 400, err.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', '));
     }
@@ -21,7 +24,8 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
         return fail(res, 400, msg);
     }
 
-    
+
+
     console.error(err);
     return fail(res, 500, env.isProd ? 'Internal server error' : String((err as Error)?.message || err));
 }

@@ -6,7 +6,8 @@ export interface IConsultation {
     expertId: string; // expert oda user id
     conversationId: string;
     feePaise: number;
-    paidBy: 'wallet' | 'credit';
+    paidBy: 'wallet' | 'credit' | 'razorpay';
+    paymentId?: string; // direct Razorpay payment na adhoda id
     expertSharePaise: number;
     platformSharePaise: number;
     status: 'active' | 'completed';
@@ -22,8 +23,8 @@ const consultationSchema = new Schema<IConsultation>(
         expertId: { type: String, required: true, index: true },
         conversationId: { type: String, required: true },
         feePaise: { type: Number, required: true },
-        paidBy: { type: String, enum: ['wallet', 'credit'], required: true },
-        expertSharePaise: { type: Number, default: 0 },
+        paidBy: { type: String, enum: ['wallet', 'credit', 'razorpay'], required: true },
+        paymentId: String, expertSharePaise: { type: Number, default: 0 },
         platformSharePaise: { type: Number, default: 0 },
         status: { type: String, enum: ['active', 'completed'], default: 'active' },
         settled: { type: Boolean, default: false },
@@ -35,4 +36,6 @@ const consultationSchema = new Schema<IConsultation>(
 // Oru user + oru expert ku oru neramathula oru active consultation mattum
 consultationSchema.index({ userId: 1, expertId: 1 }, { unique: true, partialFilterExpression: { status: 'active' } });
 
+// Oru payment oru consultation mattum (webhook + verify rendum vandhaalum duplicate aagaadhu)
+consultationSchema.index({ paymentId: 1 }, { unique: true, sparse: true });
 export const Consultation = model<IConsultation>('Consultation', consultationSchema);

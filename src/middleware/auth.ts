@@ -4,6 +4,9 @@ import { verifyToken } from '../services/auth.service';
 import { HttpError } from '../utils/httpError';
 
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
+
+    if (req.user) return next(); // munnadiye authenticate aagiruchu (double DB query vendaam)
+
     const header = req.header('authorization') || '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : '';
     if (!token) throw new HttpError(401, 'Authentication required');
@@ -20,6 +23,14 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
     if (user.isBlocked) throw new HttpError(403, 'Account is blocked');
     req.user = user;
     next();
+}
+
+/** Face verify aagaadha user app features use panna koodaadhu. Not for an admin . */
+export function requireVerified(req: Request, _res: Response, next: NextFunction) {
+    const u = req.user;
+    if (!u) throw new HttpError(401, 'Authentication required');
+    if (u.role === 'admin' || u.isImageVerified) return next();
+    throw new HttpError(403, 'Face verification required', 'FACE_VERIFICATION_REQUIRED');
 }
 
 export const requireRole =

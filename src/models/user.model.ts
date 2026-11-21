@@ -17,6 +17,8 @@ export interface IUser {
     workTiming?: string;
     typeOfWork?: string;
     profileImage?: string;
+    helps: string[];
+    interests: string[];
     role: Role;
     isImageVerified: boolean;
     isBlocked: boolean;
@@ -42,6 +44,8 @@ const userSchema = new Schema<IUser>(
         workTiming: String,
         typeOfWork: String,
         profileImage: String,
+        helps: { type: [String], default: [] },
+        interests: { type: [String], default: [] },
         role: { type: String, enum: ['user', 'expert', 'admin'], default: 'user', index: true },
         isImageVerified: { type: Boolean, default: false },
         isBlocked: { type: Boolean, default: false },

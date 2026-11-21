@@ -46,7 +46,8 @@ export async function debit(userId: string, amountPaise: number, meta: LedgerMet
         { $inc: { balance: -amountPaise } },
         { returnDocument: 'after' },
     );
-    if (!w) throw new HttpError(402, 'Insufficient wallet balance');
+    if (!w) throw new HttpError(402, 'Insufficient wallet balance', 'INSUFFICIENT_BALANCE');
+
     await WalletTransaction.create({
         id: newId('txn'), userId, type: 'debit', amount: amountPaise, balanceAfter: w.balance, ...meta,
     });

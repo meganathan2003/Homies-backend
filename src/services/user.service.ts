@@ -15,13 +15,15 @@ export function toPublicUser(u: UserDoc) {
         workTiming: u.workTiming,
         typeOfWork: u.typeOfWork,
         profileImage: u.profileImage,
+        helps: u.helps,
+        interests: u.interests,
         role: u.role,
         isImageVerified: u.isImageVerified,
     };
 }
 
 export type ProfileUpdate = Partial<
-    Pick<UserDoc, 'firstName' | 'dob' | 'city' | 'state' | 'country' | 'mobileNumber' | 'profession' | 'workTiming' | 'typeOfWork'>
+    Pick<UserDoc, 'firstName' | 'dob' | 'city' | 'state' | 'country' | 'mobileNumber' | 'profession' | 'workTiming' | 'typeOfWork' | 'helps' | 'interests'>
 >;
 
 export async function updateProfile(user: UserDoc, patch: ProfileUpdate): Promise<UserDoc> {

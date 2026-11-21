@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PURPOSE_KEYS } from '../constants/loginPurpose';
+import { HELPS, INTERESTS } from '../constants/catalog';
 
 export const loginSchema = z.object({
     idToken: z.string().min(8),
@@ -32,10 +33,12 @@ export const updateProfileSchema = z.object({
     profession: z.string().trim().min(1).optional(),
     workTiming: z.string().optional(),
     typeOfWork: z.string().trim().min(1).optional(),
+    helps: z.array(z.enum(HELPS)).max(10).optional(),
+    interests: z.array(z.enum(INTERESTS)).max(10).optional(),
 });
 
 export const updateVerificationSchema = z.object({
-  id: z.string().min(1),
-  isImageVerified: z.boolean().optional(),
-  isVoiceVerified: z.boolean().optional(),
+    id: z.string().min(1),
+    isImageVerified: z.boolean().optional(),
+    isVoiceVerified: z.boolean().optional(),
 });

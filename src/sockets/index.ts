@@ -21,9 +21,13 @@ export function initSockets(server: http.Server): Server {
             const raw = (socket.handshake.auth?.token as string | undefined) || socket.handshake.headers.authorization || '';
             const token = raw.startsWith('Bearer ') ? raw.slice(7) : raw;
             if (!token) return next(new Error('Authentication required'));
+
             const payload = verifyToken(token);
             const user = await User.findOne({ id: payload.sub });
+
             if (!user || user.isBlocked) return next(new Error('Unauthorized'));
+            if (user.role !== 'admin' && !user.isImageVerified) return next(new Error('Face verification required'));
+
             socket.data.user = { id: user.id, role: user.role, firstName: user.firstName };
             next();
         } catch {

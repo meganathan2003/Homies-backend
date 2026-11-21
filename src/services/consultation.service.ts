@@ -8,6 +8,7 @@ import { newId } from '../utils/id';
 import { emitToUser } from '../sockets';
 import * as credits from './credit.service';
 import * as wallet from './wallet.service';
+import { IPayment } from '../models/payment.model';
 
 /** Fee ah split pannum. Rounding: expert share kila round, meethi Homies ku. */
 export function splitFee(feePaise: number, expertPercent: number) {
@@ -118,4 +119,61 @@ export async function listMine(user: UserDoc, status?: 'active' | 'completed') {
     if (status) filter.status = status;
     const items = await Consultation.find(filter).sort({ startedAt: -1 }).limit(100);
     return items.map(toConsultationDto);
+}
+
+
+/** Direct Razorpay (UPI, card...) payment ku munnadi: expert available ah, already active chat illa nu check. */
+export async function assertBookable(user: UserDoc, expertUserId: string) {
+    if (user.id === expertUserId) throw new HttpError(400, 'You cannot consult yourself');
+    const [expertUser, profile] = await Promise.all([
+        User.findOne({ id: expertUserId, role: 'expert', isBlocked: false }),
+        ExpertProfile.findOne({ userId: expertUserId }),
+    ]);
+    if (!expertUser || !profile || profile.status !== 'approved') throw new HttpError(404, 'Expert not available');
+    if (await Consultation.exists({ userId: user.id, expertId: expertUserId, status: 'active' })) {
+        throw new HttpError(409, 'You already have an active consultation with this expert', 'ALREADY_ACTIVE');
+    }
+    return { expertUser, profile };
+}
+
+export async function findByPayment(paymentId: string) {
+    return Consultation.findOne({ paymentId });
+}
+
+/** Razorpay payment success aana piragu consultation start. Verify and webhook rendum vandhaalum oru thadavai mattum create aagum. */
+export async function startFromPayment(payment: Pick<IPayment, 'id' | 'userId' | 'refId' | 'amount'>) {
+    const existing = await Consultation.findOne({ paymentId: payment.id });
+    if (existing) return existing;
+
+    const expertUserId = payment.refId!;
+    const { expertShare, platformShare } = splitFee(payment.amount, env.expertSharePercent);
+    const user = await User.findOne({ id: payment.userId });
+    const consultationId = newId('con');
+    const conversationId = newId('cnv');
+
+    try {
+        const consultation = await Consultation.create({
+            id: consultationId, userId: payment.userId, expertId: expertUserId, conversationId,
+            feePaise: payment.amount, paidBy: 'razorpay', paymentId: payment.id,
+            expertSharePaise: expertShare, platformSharePaise: platformShare,
+        });
+        await Conversation.create({ id: conversationId, consultationId, userId: payment.userId, expertId: expertUserId });
+        emitToUser(expertUserId, 'consultation_started', {
+            consultationId, conversationId, userId: payment.userId, userName: user?.firstName,
+        });
+        return consultation;
+    } catch (err) {
+        await Consultation.deleteOne({ id: consultationId }).catch(() => undefined);
+        const again = await Consultation.findOne({ paymentId: payment.id });
+        if (again) return again; // rendu paths ore neram: onnu jeychuduchu
+
+        if ((err as { code?: number }).code === 11000) {
+            // Already active chat irukku (rendu thadavai pay pannirukkaanga): panam wallet ku thirumba
+            await wallet.credit(payment.userId, payment.amount, {
+                reason: 'refund', refType: 'payment_refund', refId: payment.id, description: 'Consultation was already active',
+            });
+            return null;
+        }
+        throw err; // payment fulfill retry aagum, refund pannaadhu
+    }
 }
