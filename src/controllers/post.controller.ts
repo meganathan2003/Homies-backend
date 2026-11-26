@@ -41,7 +41,6 @@ export async function unlockOrder(req: Request, res: Response) {
 }
 
 export async function unlockVerify(req: Request, res: Response) {
-    const r = await paymentService.verifyStoryUnlock(req.user!, req.body);
-    if (r.storyId !== String(req.params.id)) throw new HttpError(400, 'Payment does not belong to this story');
+    const r = await paymentService.verifyStoryUnlock(req.user!, req.body, String(req.params.id));
     return ok(res, r, r.processing ? 'Payment received, unlocking. Please retry in a moment.' : r.alreadyProcessed ? 'Already unlocked' : 'Story unlocked');
-}
+}   

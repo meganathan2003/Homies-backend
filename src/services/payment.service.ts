@@ -87,8 +87,12 @@ async function settle(orderId: string, paymentId: string, signature?: string) {
 }
 
 /** Client anuppina signature check + settle. purpose match aaganum. */
-async function verify(user: UserDoc, input: CheckoutInput, purpose: PaymentPurpose) {
-    const payment = await Payment.findOne({ razorpayOrderId: input.razorpay_order_id, userId: user.id, purpose });
+async function verify(user: UserDoc, input: CheckoutInput, purpose: PaymentPurpose, refId?: string) {
+
+    const payment = await Payment.findOne({
+        razorpayOrderId: input.razorpay_order_id, userId: user.id, purpose, ...(refId ? { refId } : {}),
+    });
+
     if (!payment) throw new HttpError(404, 'Payment not found');
     if (!razorpay.verifyCheckoutSignature(input.razorpay_order_id, input.razorpay_payment_id, input.razorpay_signature)) {
         throw new HttpError(400, 'Payment verification failed');
@@ -107,8 +111,8 @@ export async function verifyConsultation(user: UserDoc, input: CheckoutInput) {
     return { consultation, processing: !consultation, alreadyProcessed: !r.fulfilledNow };
 }
 
-export async function verifyStoryUnlock(user: UserDoc, input: CheckoutInput) {
-    const r = await verify(user, input, 'story_unlock');
+export async function verifyStoryUnlock(user: UserDoc, input: CheckoutInput, postId: string) {
+    const r = await verify(user, input, 'story_unlock', postId);
     return { unlocked: !!r.payment.fulfilledAt, processing: !r.payment.fulfilledAt, alreadyProcessed: !r.fulfilledNow, storyId: r.payment.refId };
 }
 
