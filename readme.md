@@ -69,25 +69,111 @@ Firebase credentials are needed for real Google sign-in. With `DEV_AUTH_BYPASS=t
 | `npm run seed` | Create or update development test data (blocked in production). |
 | `npm run seed:reset` | Delete the seeded users and their associated test data (blocked in production). |
 
-## API overview
+## API endpoints
 
-All REST routes use the `/api` prefix. Most request and response bodies are JSON; media uploads use multipart form data. Inputs are validated with Zod. Authenticated requests use `Authorization: Bearer <token>`. Application features require a signed-in, face-verified account; admins bypass face verification. Admin routes also require the `admin` role.
+All REST endpoints use the `/api` prefix. Unless marked **Public**, send `Authorization: Bearer <token>`. Routes under `/upload`, `/wallet`, `/experts`, `/consultations`, `/chats`, `/posts`, `/comments`, and `/notifications` require a face-verified account (admins bypass face verification). Admin endpoints require the `admin` role. JSON request bodies are validated with Zod; media uploads use multipart form data.
 
-| Prefix | Routes / capabilities |
-| --- | --- |
-| `/auth` | Register, login, set login purpose, get current user, update profile and verification details. |
-| `/verification` | Submit an image for face verification. |
-| `/payments` | Razorpay webhook and payment-failure reporting. |
-| `/upload` | Upload multiple media files. |
-| `/wallet` | Get balance and transactions; create and verify top-up orders. |
-| `/experts` | Browse experts; get/update expert profile and availability. |
-| `/consultations` | Start consultations, create/verify payment orders, list consultations, and complete as an expert. |
-| `/chats` | List conversations, read messages, and send messages. |
-| `/posts` | List/create/read/delete posts, like posts, and unlock paid content. |
-| `/comments` | List/create/delete comments and toggle likes. |
-| `/notifications` | List notifications and mark them read. |
-| `/admin` | Create/list experts and update expert status. |
-| `/helps`, `/interests`, `/hashtags` | Public onboarding catalogs. |
+### Public catalogs
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/helps` | Get onboarding help options. |
+| `GET` | `/api/interests` | Get onboarding interests. |
+| `GET` | `/api/hashtags` | Get available hashtags. |
+
+### Authentication and profile
+
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `POST` | `/api/auth/register` | Public | Register using a verified Google/Firebase ID token. |
+| `POST` | `/api/auth/login` | Public | Sign in and receive an API JWT. |
+| `POST` | `/api/auth/purpose` | Authenticated | Save the user's login purpose. |
+| `GET` | `/api/auth/me` | Authenticated | Get the current user's profile. |
+| `PUT` | `/api/auth/update-profile` | Authenticated | Update profile information. |
+| `PATCH` | `/api/auth/verification` | Authenticated | Update verification details. |
+| `POST` | `/api/verification/image` | Authenticated | Submit an image for face verification. |
+
+### Media
+
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `POST` | `/api/upload/multiple` | Verified | Upload multiple media files. |
+
+
+### Experts and consultations
+
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/experts` | Verified | List experts. |
+| `GET` | `/api/experts/:id` | Verified | Get an expert by ID. |
+| `GET` | `/api/experts/me/profile` | Expert | Get the signed-in expert's profile. |
+| `PUT` | `/api/experts/me/profile` | Expert | Update the signed-in expert's profile. |
+| `PATCH` | `/api/experts/me/status` | Expert | Update expert availability. |
+| `POST` | `/api/consultations` | Verified | Start a consultation using wallet funds or a free credit. |
+| `POST` | `/api/consultations/order` | Verified | Create an external payment order for a consultation. |
+| `POST` | `/api/consultations/verify` | Verified | Verify consultation payment. |
+| `GET` | `/api/consultations` | Verified | List the current user's consultations. |
+| `POST` | `/api/consultations/:id/complete` | Expert | Complete a consultation. |
+
+### Chat
+
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/chats/conversations` | Verified | List conversations. |
+| `GET` | `/api/chats/conversations/:id/messages` | Verified | List messages in a conversation. |
+| `POST` | `/api/chats/conversations/:id/messages` | Verified | Send a message. |
+
+### Posts and comments
+
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/posts` | Verified | List posts. |
+| `POST` | `/api/posts` | Verified | Create a post. |
+| `GET` | `/api/posts/:id` | Verified | Get a post by ID. |
+| `DELETE` | `/api/posts/:id` | Verified | Delete a post. |
+| `POST` | `/api/posts/:id/toggle-like` | Verified | Toggle the current user's like on a post. |
+| `POST` | `/api/posts/:id/unlock` | Verified | Unlock paid content using wallet funds. |
+| `POST` | `/api/posts/:id/unlock/order` | Verified | Create an external payment order to unlock content. |
+| `POST` | `/api/posts/:id/unlock/verify` | Verified | Verify payment for a content unlock. |
+| `GET` | `/api/comments` | Verified | List comments. |
+| `POST` | `/api/comments` | Verified | Create a comment. |
+| `DELETE` | `/api/comments/:id` | Verified | Delete a comment. |
+| `POST` | `/api/comments/:id/toggle-like` | Verified | Toggle the current user's like on a comment. |
+
+
+### Wallet and payments
+
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/wallet` | Verified | Get wallet balance. |
+| `GET` | `/api/wallet/transactions` | Verified | List wallet transactions. |
+| `POST` | `/api/wallet/topup/order` | Verified | Create a wallet top-up payment order. |
+| `POST` | `/api/wallet/topup/verify` | Verified | Verify a completed top-up payment. |
+| `POST` | `/api/wallet/topup/failure` | Verified | Report a failed top-up payment. |
+| `POST` | `/api/payments/webhook` | **Public** (Razorpay signature) | Receive Razorpay webhook events. |
+| `POST` | `/api/payments/failure` | Verified | Report a failed payment. |
+
+
+### Notifications
+
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/notifications` | Verified | List notifications. |
+| `POST` | `/api/notifications/read` | Verified | Mark notifications as read. |
+
+### Admin
+
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `POST` | `/api/admin/experts` | Admin | Create an expert. |
+| `GET` | `/api/admin/experts` | Admin | List experts for administration. |
+| `PATCH` | `/api/admin/experts/:id/status` | Admin | Change an expert's approval status. |
+
+### Health check
+
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/health` | **Public** | Service and MongoDB readiness (`200` when connected, otherwise `503`). |
 
 Socket.IO shares the HTTP server. Authenticate the socket with `auth: { token: "<JWT>" }` (or an `Authorization: Bearer` header). Chat events and payloads are defined in `src/sockets/chat.socket.ts`; experts are marked online while connected and offline after their last socket disconnects.
 
